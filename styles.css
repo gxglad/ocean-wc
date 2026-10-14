@@ -197,17 +197,15 @@ p { margin: 0 0 1em; }
 }
 
 /* 入场结束后首屏元素依次浮现 */
-body.loading #nav,
-body.loading #hud,
-body.loading #rail { opacity: 0; }
+body.loading #nav { opacity: 0; }
 body.loaded #nav { animation: nav-in .9s var(--ease) .05s both; }
-body.loaded #hud { animation: fade-in .9s var(--ease) .3s both; }
-body.loaded #rail { animation: fade-in .9s var(--ease) .3s both; }
 @keyframes nav-in { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: none; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* 基础状态保持可见，动画只做增强：
    即使动画不执行（被拦截/不支持），内容也不会隐形 */
+body.loaded #hud { animation: fade-in .9s var(--ease) .3s both; }
+body.loaded #rail { animation: fade-in .9s var(--ease) .3s both; }
 body.loaded #surface .hero-mark { animation: rise-blur 1.1s var(--ease) .1s both; }
 body.loaded #surface .hero-eyebrow { animation: rise-blur 1s var(--ease) .3s both; }
 body.loaded #surface h1.hero { animation: rise-in 1.1s var(--ease) .42s both; }
@@ -224,6 +222,21 @@ body.loaded #surface .scroll-hint { animation: rise-blur 1s var(--ease) 1.05s bo
 @keyframes rise-blur {
   from { opacity: 0; transform: translateY(26px); filter: blur(6px); }
   to   { opacity: 1; transform: none; filter: blur(0); }
+}
+
+/* 保险终态：JS 确认动画窗口已过，强制显示首屏文字（不依赖 CSS 动画时钟）。
+   注意不含 #hud / #rail —— 它们由 body.dived 控制显隐。 */
+body.anim-safe #nav,
+body.anim-safe #surface .hero-mark,
+body.anim-safe #surface .hero-eyebrow,
+body.anim-safe #surface h1.hero,
+body.anim-safe #surface .hero-sub,
+body.anim-safe #surface .hero-tag,
+body.anim-safe #surface .hero-cta,
+body.anim-safe #surface .scroll-hint {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
 }
 
 /* ---------- 1. 图标 ---------- */
