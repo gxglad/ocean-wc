@@ -25,6 +25,28 @@
   /* ==========================================================
      0. 入场序列 —— 从 10909 米上浮，穿过五层海域冲出海面
      ========================================================== */
+
+  /* 首屏保险：文字入场依赖 CSS 动画。若动画被禁用、被拦截或时钟异常，
+     到点后强制落到终态，绝不让标题一直隐形。
+     与入场是否正常结束完全解耦，避免相互抢先。 */
+  function armHeroSafety() {
+    var arm = function () {
+      setTimeout(function () { body.classList.add('anim-safe'); }, 3400);
+    };
+    if (body.classList.contains('loaded')) arm();
+    else {
+      // 用轮询而非一次性回调，保证无论谁先放行页面都会挂上保险
+      var tries = 0;
+      var iv = setInterval(function () {
+        tries++;
+        if (body.classList.contains('loaded') || tries > 120) {
+          clearInterval(iv);
+          arm();
+        }
+      }, 100);
+    }
+  }
+
   function initIntro() {
     var intro = $('#intro');
     var cvI = $('#intro-canvas');
@@ -54,8 +76,8 @@
       body.classList.add('loaded');
     }
 
-    if (!intro) { body.classList.remove('loading'); body.classList.add('loaded'); return; }
-    if (REDUCED || !cvI || !cvI.getContext) { bail(); return; }
+    if (!intro) { body.classList.remove('loading'); body.classList.add('loaded'); armHeroSafety(); return; }
+    if (REDUCED || !cvI || !cvI.getContext) { bail(); armHeroSafety(); return; }
 
     intro.addEventListener('click', finish);
     window.addEventListener('keydown', function (e) {
@@ -1120,6 +1142,7 @@
      ========================================================== */
   function boot() {
     initIntro();
+    armHeroSafety();
     buildMarkers();
     sizeCanvas();
     sizeJelly();
