@@ -818,7 +818,11 @@
 <footer>
   <div class="foot">
     <small>深蓝档案 · OCEAN DOSSIER · 制作人 <b style="color:var(--glow)">吴晨</b></small>
-    <span class="sig">数据来源：公开的海洋研究与保护评估 · 内容仅用于科普与倡导 · <b>吴晨</b> 出品</span>
+    <span class="sig">数据来源：公开的海洋研究与保护评估 · 内容仅用于科普与倡导</span>
+    <span class="sig">
+      <a href="https://github.com/gxglad/ocean-wc" target="_blank" rel="noopener noreferrer">查看源码</a>
+      · <b>吴晨</b> 出品
+    </span>
   </div>
 </footer>
 
@@ -965,12 +969,15 @@
 
 <script src="app.js"></script>
 <script>
-/* 兜底：若 app.js 未执行（脚本被拦/报错），5.5 秒后无论如何放行页面 */
+/* 兜底：若 app.js 未执行（脚本被拦/报错）或入场卡住，5.5 秒后强制放行页面。
+   注意：已正常结束则直接返回，避免与 app.js 的收尾逻辑抢跑。 */
 setTimeout(function () {
   var i = document.getElementById('intro');
-  if (i && !i.dataset.finished) { i.dataset.finished = '1'; i.style.display = 'none'; }
+  if (i && i.dataset.finished) return;
+  if (i) { i.dataset.finished = '1'; i.style.display = 'none'; }
   document.body.classList.remove('loading');
   document.body.classList.add('loaded');
+  document.body.classList.add('anim-safe');
 }, 5500);
 </script>
 </body>
