@@ -965,12 +965,15 @@
 
 <script src="app.js"></script>
 <script>
-/* 兜底：若 app.js 未执行（脚本被拦/报错），5.5 秒后无论如何放行页面 */
+/* 兜底：若 app.js 未执行（脚本被拦/报错）或入场卡住，5.5 秒后强制放行页面。
+   注意：已正常结束则直接返回，避免与 app.js 的收尾逻辑抢跑。 */
 setTimeout(function () {
   var i = document.getElementById('intro');
-  if (i && !i.dataset.finished) { i.dataset.finished = '1'; i.style.display = 'none'; }
+  if (i && i.dataset.finished) return;
+  if (i) { i.dataset.finished = '1'; i.style.display = 'none'; }
   document.body.classList.remove('loading');
   document.body.classList.add('loaded');
+  document.body.classList.add('anim-safe');
 }, 5500);
 </script>
 </body>
