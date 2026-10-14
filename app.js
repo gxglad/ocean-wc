@@ -994,25 +994,124 @@
   }
 
   /* ==========================================================
-     9. 分享
+     9. 分享 —— 多级降级，任何环境都要有反馈
      ========================================================== */
   function initShare() {
     var btn = $('#btn-share');
     if (!btn) return;
+
+    var TITLE = '深蓝档案 · 一口气潜到马里亚纳';
+    var TEXT = '深蓝档案 —— 一口气潜到马里亚纳。往下滚，就是下潜。';
+
+    /** 旧式复制：兼容非安全上下文（file:// 等无 clipboard API 的场景） */
+    function legacyCopy(str) {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = str;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '-1000px';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, ta.value.length);
+        var ok = document.execCommand && document.execCommand('copy');
+        document.body.removeChild(ta);
+        return !!ok;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    /** 弹出一个可手动复制的面板（最终兜底） */
+    function manualPanel(str) {
+      var old = document.getElementById('share-panel');
+      if (old && old.parentNode) old.parentNode.removeChild(old);
+
+      var box = document.createElement('div');
+      box.id = 'share-panel';
+      box.setAttribute('role', 'dialog');
+      box.setAttribute('aria-label', '手动复制分享链接');
+      box.innerHTML =
+        '<div class="sp-card">' +
+        '<div class="sp-title">复制这个链接分享出去</div>' +
+        '<input class="sp-input" readonly>' +
+        '<div class="sp-row">' +
+        '<button class="sp-btn sp-ok" type="button">复制</button>' +
+        '<button class="sp-btn sp-close" type="button">关闭</button>' +
+        '</div>' +
+        '</div>';
+      document.body.appendChild(box);
+      var input = box.querySelector('.sp-input');
+      input.value = str;
+      setTimeout(function () {
+        input.focus();
+        input.select();
+      }, 60);
+
+      box.querySelector('.sp-ok').addEventListener('click', function () {
+        input.focus();
+        input.select();
+        if (legacyCopy(str)) { say('已复制 · 请把它交给下一个人'); return; }
+        toClipboard(str).then(function (ok) {
+          say(ok ? '已复制 · 请把它交给下一个人' : '已全选 · 按 Ctrl+C 复制');
+        });
+      });
+      box.querySelector('.sp-close').addEventListener('click', function () {
+        if (box.parentNode) box.parentNode.removeChild(box);
+      });
+      box.addEventListener('click', function (e) {
+        if (e.target === box && box.parentNode) box.parentNode.removeChild(box);
+      });
+    }
+
+    function toClipboard(str) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(str).then(function () { return true; }, function () { return false; });
+      }
+      return Promise.resolve(false);
+    }
+
     btn.addEventListener('click', function () {
       var url = location.href;
-      var text = '深蓝档案 —— 一口气潜到马里亚纳。往下滚，就是下潜。';
+      var payload = TEXT + ' ' + url;
+
+      function fallback() {
+        toClipboard(payload).then(function (ok) {
+          if (ok) { say('链接已复制 · 请把它交给下一个人'); return; }
+          if (legacyCopy(payload)) { say('链接已复制 · 请把它交给下一个人'); return; }
+          manualPanel(payload);
+        });
+      }
+
+      // 1) 系统分享（需要安全上下文 + 用户手势）
       if (navigator.share) {
-        navigator.share({ title: '深蓝档案', text: text, url: url }).catch(function () {});
+        var data = { title: TITLE, text: TEXT, url: url };
+        var p;
+        try {
+          if (navigator.canShare && !navigator.canShare(data)) { fallback(); return; }
+          p = navigator.share(data);
+        } catch (e) { fallback(); return; }
+
+        if (p && p.then) {
+          p.then(function () {
+            say('谢谢分享 · 海洋需要更多人看见');
+          }, function (err) {
+            // 用户主动取消：不打扰
+            if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) {
+              if (err.name === 'NotAllowedError') fallback();
+              return;
+            }
+            fallback();
+          });
+        } else {
+          // 老式实现没有返回 Promise，无法判断结果，补一个复制兜底
+          toClipboard(payload);
+        }
         return;
       }
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text + ' ' + url).then(function () {
-          say('链接已复制 · 请把它交给下一个人');
-        }).catch(function () { say(url); });
-      } else {
-        say(url);
-      }
+
+      fallback();
     });
   }
 
