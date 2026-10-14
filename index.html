@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>深蓝档案 · 一口气潜到马里亚纳</title>
+<meta name="description" content="深蓝档案 —— 从海面潜到 10909 米，认识 12 种海洋生物，看清 5 个正在发生的威胁。海洋不是取之不尽的，它是我们的呼吸。">
+<meta name="theme-color" content="#01040d">
+<meta name="author" content="吴晨">
+<meta property="og:title" content="深蓝档案 · 一口气潜到马里亚纳">
+<meta property="og:description" content="往下滚，就是下潜。认识深海，然后保护它。">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='78' font-size='78'%3E%F0%9F%90%8B%3C/text%3E%3C/svg%3E">
+</head>
+<body data-phase="surface" class="loading">
+
+<!-- ========== 入场 · 从马里亚纳上浮 ========== -->
+<div id="intro" role="status" aria-label="正在上浮，加载深蓝档案">
+  <canvas id="intro-canvas" aria-hidden="true"></canvas>
+  <div class="intro-light" id="intro-light" aria-hidden="true"></div>
+  <div class="intro-flash" id="intro-flash" aria-hidden="true"></div>
+  <div class="intro-warn">建议开启声音想象一下：水压、黑暗、以及光</div>
+  <div class="intro-core">
+    <div class="intro-name">深蓝档案</div>
+    <div class="intro-sub">OCEAN DOSSIER · 吴晨</div>
+    <div class="intro-bar"><i></i></div>
+    <div class="intro-read">
+      <b id="intro-depth">10909</b><span>M</span><em id="intro-msg">挑战者深渊 · 起点</em>
+    </div>
+  </div>
+  <div class="intro-skip">点击任意处跳过</div>
+</div>
+
+<!-- ========== 水体层 ========== -->
+<div id="waterviz" aria-hidden="true">
+  <div class="w-layer base"></div>
+  <div class="w-layer aurora"></div>
+  <div class="w-layer caustics"></div>
+  <div class="w-layer rays"></div>
+  <div class="w-layer swell">
+    <svg class="swell-svg" viewBox="0 0 1200 140" preserveAspectRatio="none">
+      <path class="sw sw-back" d="M0,64 C100,34 200,34 300,64 C400,94 500,94 600,64 C700,34 800,34 900,64 C1000,94 1100,94 1200,64"/>
+      <path class="sw sw-front" d="M0,88 C100,58 200,58 300,88 C400,118 500,118 600,88 C700,58 800,58 900,88 C1000,118 1100,118 1200,88"/>
+    </svg>
+  </div>
+  <div class="w-layer motes"></div>
+  <div class="w-layer megafauna">
+    <svg class="whale-ghost ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#whale"></use></svg>
+  </div>
+  <div class="w-layer drifters">
+    <svg class="drifter d1 ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#dolphin"></use></svg>
+    <svg class="drifter d2 ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#turtle"></use></svg>
+    <svg class="drifter d3 ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#lanternfish"></use></svg>
+    <svg class="drifter d4 ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#jellyfish"></use></svg>
+    <svg class="drifter d5 ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#whaleshark"></use></svg>
+  </div>
+  <div class="w-layer kelp">
+    <svg viewBox="0 0 1440 300" preserveAspectRatio="none">
+      <path class="st" d="M40,300 C60,250 20,220 46,170 C66,132 34,110 54,66"/>
+      <path class="st" d="M132,300 C150,258 116,232 140,188 C160,152 130,126 152,88"/>
+      <path class="st" d="M228,300 C248,246 210,214 238,166 C258,128 228,104 250,60"/>
+      <path class="st" d="M1120,300 C1140,252 1104,222 1130,174 C1150,136 1120,112 1142,70"/>
+      <path class="st" d="M1236,300 C1256,244 1218,214 1246,164 C1266,126 1236,102 1258,56"/>
+      <path class="st" d="M1352,300 C1370,256 1338,228 1362,182 C1382,146 1352,120 1374,80"/>
+      <path class="st" d="M690,300 C708,258 674,230 700,184 C720,148 690,122 712,80"/>
+      <path class="st" d="M840,300 C858,262 826,236 850,192 C870,158 840,132 862,92"/>
+    </svg>
+  </div>
+  <div class="w-layer vignette"></div>
+</div>
+<canvas id="fx" aria-hidden="true"></canvas>
+<canvas id="bloom-canvas" aria-hidden="true"></canvas>
+<div id="sonar-cursor" aria-hidden="true"></div>
+
+<!-- ========== 顶部导航 ========== -->
+<header id="nav">
+  <a class="brand" href="#surface" aria-label="回到海面">
+    <svg class="mark ic" viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="pulse-ring" cx="50" cy="50" r="40"></circle>
+      <path d="M20 52 C34 34 46 34 56 50 C64 62 72 64 80 54"></path>
+      <path d="M14 62 C30 42 44 42 55 59 C64 72 74 74 84 62"></path>
+    </svg>
+    <span>
+      <span class="name">深蓝档案 <b>· 吴晨</b></span>
+      <span class="sub">OCEAN DOSSIER</span>
+    </span>
+  </a>
+
+  <nav class="nav-links" aria-label="主要章节">
+    <a href="#surface">海面</a>
+    <a href="#descend">下潜</a>
+    <a href="#atlas">生物档案</a>
+    <a href="#data">数据</a>
+    <a href="#threats">威胁</a>
+    <a href="#act">行动</a>
+    <a href="#pledge">承诺</a>
+  </nav>
+
+  <div class="nav-act">
+    <button class="chip opt" id="btn-sonar" type="button" title="开启后，探测到的生物会发光">
+      <svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#jellyfish"></use></svg>
+      声呐
+    </button>
+    <button class="chip opt" id="btn-bloom" type="button" title="播放水母群发光">
+      <svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#vent"></use></svg>
+      发光
+    </button>
+    <span class="chip"><span class="dot-live"></span>关注中</span>
+  </div>
+</header>
+
+<!-- 左侧深度轨道 -->
+<aside id="rail" aria-hidden="true">
+  <a href="#surface" data-for="surface"><i></i><span>海面 · 0M</span></a>
+  <a href="#s-sunlight" data-for="s-sunlight"><i></i><span>透光层 · 200M</span></a>
+  <a href="#s-twilight" data-for="s-twilight"><i></i><span>弱光层 · 1000M</span></a>
+  <a href="#s-midnight" data-for="s-midnight"><i></i><span>无光层 · 4000M</span></a>
+  <a href="#s-abyss" data-for="s-abyss"><i></i><span>深渊层 · 6000M</span></a>
+  <a href="#s-hadal" data-for="s-hadal"><i></i><span>超深渊 · 10909M</span></a>
+</aside>
+
+<!-- 右侧深度 HUD -->
+<div id="hud" aria-hidden="true">
+  <div class="hud-track">
+    <div class="hud-water"></div>
+    <div class="hud-dot"></div>
+    <div class="hud-tick" style="top:0%">0</div>
+    <div class="hud-tick" style="top:25%">2000</div>
+    <div class="hud-tick" style="top:50%">4000</div>
+    <div class="hud-tick" style="top:75%">6000</div>
+    <div class="hud-tick" style="top:100%">10909 m</div>
+  </div>
+  <div class="hud-info">
+    <b id="hud-depth">0</b>
+    <span>METERS</span>
+    <em id="hud-zone">海面</em>
+  </div>
+</div>
+
+<main>
+
+<!-- ============================================================
+     首屏 · 海面
+     ============================================================ -->
+<section id="surface" class="sec" data-depth="0" data-zone="海面">
+  <div class="hero-mark">
+    <div class="glow-halo"></div>
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="pulse-ring" cx="50" cy="50" r="34"></circle>
+      <circle class="pulse-ring" cx="50" cy="50" r="34"></circle>
+      <circle class="pulse-ring" cx="50" cy="50" r="34"></circle>
+    </svg>
+    <svg style="position:absolute;inset:0;margin:auto" class="ic" viewBox="0 0 100 100" aria-hidden="true">
+      <use href="#whale"></use>
+    </svg>
+  </div>
+
+  <div class="hero-eyebrow">SCROLL DOWN TO DIVE · 往下滚，就是下潜</div>
+
+  <h1 class="hero">深蓝档案</h1>
+  <div class="hero-sub">一口气潜到马里亚纳</div>
+
+  <p class="hero-tag">
+    地球表面的 <em>71%</em> 是海。人类探索过的海底不到 <em>5%</em>。
+    我们已经在污染它、捞空它、把它变酸——却几乎还不认识它。
+  </p>
+
+  <div class="hero-cta">
+    <a class="btn primary" href="#descend">
+      <svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#squid"></use></svg>
+      开始下潜
+    </a>
+    <a class="btn" href="#threats">先看看威胁</a>
+  </div>
+
+  <div class="scroll-hint">SCROLL</div>
+</section>
+
+<!-- ============================================================
+     下潜序列
+     ============================================================ -->
+<section id="descend" class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">THE DESCENT · 垂直下潜</div>
+    <h2 class="title reveal">越往下，越安静，也越陌生<span class="thin"> —— 也越脆弱</span></h2>
+    <p class="lede reveal">
+      接下来的页面会跟着你的滚动条一起下沉。每一层海域都有自己的居民、
+      自己的规则，和同一种麻烦：<strong>人类的痕迹比潜水器到得更早</strong>。
+    </p>
+
+    <div class="descend">
+
+      <!-- 透光层 -->
+      <article class="depth-row" id="s-sunlight" data-zone="透光层" data-depth="200">
+        <div class="depth-badge">
+          <span class="ring"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#coral"></use></svg></span>
+          <span class="val">0–200 M</span>
+        </div>
+        <div class="depth-card">
+          <h3>透光层 · 阳光还能照到底</h3>
+          <div class="latin">Epipelagic Zone · 0–200 m</div>
+          <p>
+            只占海洋体积的 2%，却住着绝大多数我们熟悉的海鲜和鱼群。
+            这里的珊瑚礁被称为「海洋中的热带雨林」，用 <strong>不到 0.1% 的海底面积</strong>
+            养活了全球约四分之一的海洋物种。
+          </p>
+          <p>
+            它也是最热的一层。过去一百年，海水表层平均升温了约 1℃，听起来很少——
+            对珊瑚来说，这等于连续几年发高烧。
+          </p>
+          <div class="facts">
+            <span>珊瑚礁 · 育幼场</span>
+            <span>浮游植物 · 供给全球一半以上氧气</span>
+            <span class="warn">升温 1℃ · 白化临界</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- 弱光层 -->
+      <article class="depth-row" id="s-twilight" data-zone="弱光层" data-depth="1000">
+        <div class="depth-badge">
+          <span class="ring"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#turtle"></use></svg></span>
+          <span class="val">200–1000 M</span>
+        </div>
+        <div class="depth-card">
+          <h3>弱光层 · 光不够用了</h3>
+          <div class="latin">Mesopelagic Zone · 200–1000 m</div>
+          <p>
+            阳光在这里只剩一层幽蓝。这是地球上规模最大的一次迁移发生的地方——
+            每天日落，数以<strong>十亿吨计</strong>的小鱼和磷虾从深海浮上来觅食，
+            天亮前再沉回去。这是地球上最大的动物运动，多数人从未听说过。
+          </p>
+          <p>
+            金枪鱼、剑鱼、海龟都靠这场「垂直盛宴」活着。
+            而工业渔船正在把这一层当成新的猎场。
+          </p>
+          <div class="facts">
+            <span>每日垂直迁移</span>
+            <span>深层散射层 · 声呐上的假海底</span>
+            <span class="warn">商业化捕捞 · 尚无规则</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- 无光层 -->
+      <article class="depth-row" id="s-midnight" data-zone="无光层" data-depth="4000">
+        <div class="depth-badge">
+          <span class="ring"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#lanternfish"></use></svg></span>
+          <span class="val">1000–4000 M</span>
+        </div>
+        <div class="depth-card">
+          <h3>无光层 · 太阳彻底缺席</h3>
+          <div class="latin">Bathypelagic Zone · 1000–4000 m</div>
+          <p>
+            这里没有植物，没有季节，也没有昼夜。生物靠「海雪」活着——
+            从上面飘落的尸体、粪便和碎屑，一飘就是几周。
+          </p>
+          <p>
+            因为太黑，光在这里变成了武器。约 <strong>76%</strong> 的深海生物会自己发光，
+            用来引诱猎物、伪装自己、或者找对象。灯笼鱼身上的那一排小光点，
+            就是深海最常见的语言。
+          </p>
+          <div class="facts">
+            <span>生物发光 · 深海通用语言</span>
+            <span>海雪 · 唯一食物来源</span>
+            <span class="danger">拖网 · 一次扫平几百年的珊瑚</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- 深渊层 -->
+      <article class="depth-row" id="s-abyss" data-zone="深渊层" data-depth="6000">
+        <div class="depth-badge">
+          <span class="ring"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#anglerfish"></use></svg></span>
+          <span class="val">4000–6000 M</span>
+        </div>
+        <div class="depth-card">
+          <h3>深渊层 · 每平方厘米 400 公斤</h3>
+          <div class="latin">Abyssal Zone · 4000–6000 m</div>
+          <p>
+            水压相当于把一辆小汽车压在你的指甲盖上。这里的水温常年接近
+            <strong>2℃</strong>，食物稀少到一只沉下去的鲸鱼尸体可以养活一整个生态系统几十年
+            ——科学家管它叫「鲸落」。
+          </p>
+          <p>
+            生命在这里走的是另一条路：新陈代谢极慢，寿命极长。
+            深海珊瑚能活几千年，格陵兰鲨可以活到 400 岁。
+            它们长得有多慢，被毁掉后恢复得就有多慢。
+          </p>
+          <div class="facts">
+            <span>鲸落 · 深海绿洲</span>
+            <span>寿命以百年、千年计</span>
+            <span class="danger">恢复周期 · 数百年起</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- 超深渊 -->
+      <article class="depth-row" id="s-hadal" data-zone="超深渊" data-depth="10909">
+        <div class="depth-badge">
+          <span class="ring"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#amphipod"></use></svg></span>
+          <span class="val">6000–10909 M</span>
+        </div>
+        <div class="depth-card">
+          <h3>超深渊 · 地球最深的角落</h3>
+          <div class="latin">Hadal Zone · 6000–11000 m</div>
+          <p>
+            挑战者深渊最深处 <strong>10909 米</strong>，把珠穆朗玛峰倒过来塞进去，
+            峰顶离海面还有两公里。
+          </p>
+          <p>
+            更让人沉默的是：科学家在这里的端足类体内检出了
+            <strong>多氯联苯（PCB）</strong>——一种 1970 年代就被全球禁用的工业毒物。
+            它一路从工厂流到海洋，沉到海底，被最底层的小虾吃进身体。
+            <strong>地球上没有「足够远」的地方了。</strong>
+          </p>
+          <div class="facts">
+            <span>10909 M · 人类最深足迹</span>
+            <span class="danger">检出禁用工业毒物 PCB</span>
+            <span class="danger">微塑料 · 已无处不在</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     生物档案
+     ============================================================ -->
+<section id="atlas" class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">FIELD ATLAS · 现场档案</div>
+    <h2 class="title reveal">十二份档案<span class="thin"> · 从珊瑚到深海虾</span></h2>
+    <p class="lede reveal">
+      这是一份很小的名册。它们各自代表一种活法，
+      也各自代表一种正在消失的可能。
+    </p>
+
+    <div class="creature-grid">
+
+      <article class="ccard reveal">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#coral"></use></svg></div>
+        <h3>造礁石珊瑚</h3>
+        <div class="latin">Scleractinia</div>
+        <p>不是石头，是几万只微小的珊瑚虫盖的房子。它们和体内的虫黄藻共生，靠阳光吃饭。水温一高，珊瑚就把藻赶走——于是变成一片惨白。</p>
+        <div class="status"><span>受威胁等级</span><b class="crit">极危 / 白化中</b></div>
+      </article>
+
+      <article class="ccard reveal">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#turtle"></use></svg></div>
+        <h3>绿海龟</h3>
+        <div class="latin">Chelonia mydas</div>
+        <p>靠磁场和星光导航，横跨整个大洋回到自己出生的那片沙滩产卵。幼龟的性别由沙温决定——沙越热，雌龟越多。</p>
+        <div class="status"><span>受威胁等级</span><b>濒危</b></div>
+      </article>
+
+      <article class="ccard reveal">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#dolphin"></use></svg></div>
+        <h3>宽吻海豚</h3>
+        <div class="latin">Tursiops truncatus</div>
+        <p>用声呐「看」世界，会给同伴起名字，会教幼崽用海绵保护吻部。它们生活的水域，正是塑料和噪音最集中的地方。</p>
+        <div class="status"><span>受威胁等级</span><b>无危（局部下降）</b></div>
+      </article>
+
+      <article class="ccard reveal">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#whaleshark"></use></svg></div>
+        <h3>鲸鲨</h3>
+        <div class="latin">Rhincodon typus</div>
+        <p>世界上最大的鱼，可以长到 18 米，却只吃浮游生物。每一条的斑点图案都独一无二，像指纹。生长极慢，性成熟要 30 年。</p>
+        <div class="status"><span>受威胁等级</span><b class="crit">濒危</b></div>
+      </article>
+
+      <article class="ccard reveal">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#whale"></use></svg></div>
+        <h3>抹香鲸</h3>
+        <div class="latin">Physeter macrocephalus</div>
+        <p>地球上脑袋最大的动物，能潜到 2000 米以下捕食深海鱿鱼。它排出的粪便富含铁，反过来喂养了海面的浮游植物——鲸鱼会「施肥」。</p>
+        <div class="status"><span>受威胁等级</span><b>易危</b></div>
+      </article>
+
+      <article class="ccard reveal">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#squid"></use></svg></div>
+        <h3>大王酸浆鱿</h3>
+        <div class="latin">Mesonychoteuthis hamiltoni</div>
+        <p>有史以来最重的无脊椎动物，眼睛直径可达 27 厘米——是动物界最大的眼，为了在黑暗中看见抹香鲸。我们对它几乎一无所知。</p>
+        <div class="status"><span>受威胁等级</span><b>数据缺乏</b></div>
+      </article>
+
+      <article class="ccard reveal">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#lanternfish"></use></svg></div>
+        <h3>灯笼鱼</h3>
+        <div class="latin">Myctophidae</div>
+        <p>深海数量最多的鱼类之一，腹部的发光器能伪装自己的轮廓。每天游几百米上下，扛起了整片海洋的食物链。捕捞它们等于抽掉地基。</p>
+        <div class="status"><span>受威胁等级</span><b>数据缺乏</b></div>
+      </article>
+
+      <article class="ccard reveal">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#anglerfish"></use></svg></div>
+        <h3>深海鮟鱇</h3>
+        <div class="latin">Ceratiidae</div>
+        <p>头顶一根会发光的「钓竿」，是细菌在替它点灯。雄鱼只有雌鱼几分之一大，会咬住雌鱼身体融合在一起，最终成为她身上一对提供精子的器官。</p>
+        <div class="status"><span>受威胁等级</span><b>数据缺乏</b></div>
+      </article>
+
+      <article class="ccard reveal">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#jellyfish"></use></svg></div>
+        <h3>深海水母</h3>
+        <div class="latin">Cnidaria · Medusozoa</div>
+        <p>没有大脑、没有心脏、没有骨头，却在地球上活了五亿多年，比恐龙还早。有些种类可以把自己「重启」回幼体，理论上能不断重来。</p>
+        <div class="status"><span>受威胁等级</span><b>无危</b></div>
+      </article>
+
+      <article class="ccard reveal">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#vent"></use></svg></div>
+        <h3>热液喷口生态</h3>
+        <div class="latin">Hydrothermal Vent Community</div>
+        <p>1977 年才发现的世界：不靠阳光，靠化学能活着。管虫、盲虾、喷口蟹挤在滚烫的黑烟囱旁。生命的另一种答案——也可能藏在别的星球上。</p>
+        <div class="status"><span>受威胁等级</span><b class="crit">受采矿威胁</b></div>
+      </article>
+
+      <article class="ccard reveal">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#amphipod"></use></svg></div>
+        <h3>端足类</h3>
+        <div class="latin">Amphipoda</div>
+        <p>深海最底层最忙的食腐者，什么都吃——包括沉下来的垃圾。正因如此，它们体内检出了禁用几十年的工业毒物。它们是深海的化验单。</p>
+        <div class="status"><span>受威胁等级</span><b>数据缺乏</b></div>
+      </article>
+
+      <article class="ccard danger reveal">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#plastic"></use></svg></div>
+        <h3>一次性塑料瓶</h3>
+        <div class="latin">— 不应该在这一页</div>
+        <p>它不属于这份名册。但它已经出现在马里亚纳海沟、北极冰芯、以及每一只海鸟的胃里。它不会分解，只会碎成越来越小的碎片，然后进入食物链。</p>
+        <div class="status"><span>受威胁等级</span><b class="crit">其余全部 · 因它而危</b></div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     数据
+     ============================================================ -->
+<section id="data" class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">MEASUREMENTS · 实测数据</div>
+    <h2 class="title reveal">不需要形容词<span class="thin"> · 数字自己会说话</span></h2>
+    <p class="lede reveal">
+      下面每个数字都来自公开的研究与评估。它们不是预测，是<strong>已经发生的事</strong>。
+    </p>
+
+    <div class="stat-grid">
+      <div class="stat reveal">
+        <div class="num" data-count="1100" data-suffix="+">0+</div>
+        <div class="cap"><b>缠住海洋生物的物种数</b>塑料缠绕与误食已被记录在 1100 多个物种身上</div>
+      </div>
+      <div class="stat reveal">
+        <div class="num" data-count="14" data-suffix=" 万吨">14 万吨</div>
+        <div class="cap"><b>每年入海的塑料</b>约 1400 万吨，相当于每分钟倒进一整车垃圾</div>
+      </div>
+      <div class="stat reveal">
+        <div class="num" data-count="50" data-suffix="%">0%</div>
+        <div class="cap"><b>珊瑚礁已经消失</b>全球珊瑚覆盖率相比 1950 年代减少约一半</div>
+      </div>
+      <div class="stat reveal">
+        <div class="num" data-count="30" data-suffix="%">0%</div>
+        <div class="cap"><b>海水酸化的上升幅度</b>工业革命以来海洋表层酸度上升约 30%</div>
+      </div>
+      <div class="stat reveal">
+        <div class="num" data-count="90" data-suffix="%">0%</div>
+        <div class="cap"><b>大型鱼类种群流失</b>过去数十年，金枪鱼、鲨鱼等大型鱼类大幅下降</div>
+      </div>
+      <div class="stat reveal">
+        <div class="num" data-count="5" data-suffix="%">0%</div>
+        <div class="cap"><b>被探索过的海底</b>剩下 95% 的海底，我们连图纸都还没有</div>
+      </div>
+    </div>
+
+    <div class="sonar-panel reveal">
+      <div class="sonar-inner">
+        <table class="sonar">
+          <thead>
+            <tr>
+              <th>声呐识别</th>
+              <th>类别</th>
+              <th>栖息深度</th>
+              <th>主要威胁</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="name"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#coral"></use></svg>造礁珊瑚</td>
+              <td>刺胞动物</td><td>0–50 m</td><td>升温 · 酸化 · 采挖</td>
+              <td><span class="pill cr">极危方向</span></td>
+            </tr>
+            <tr>
+              <td class="name"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#turtle"></use></svg>绿海龟</td>
+              <td>爬行纲</td><td>0–40 m</td><td>误捕 · 塑料 · 沙滩开发</td>
+              <td><span class="pill en">濒危</span></td>
+            </tr>
+            <tr>
+              <td class="name"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#dolphin"></use></svg>宽吻海豚</td>
+              <td>哺乳纲</td><td>0–300 m</td><td>噪音 · 误捕 · 污染</td>
+              <td><span class="pill lc">无危</span></td>
+            </tr>
+            <tr>
+              <td class="name"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#whaleshark"></use></svg>鲸鲨</td>
+              <td>软骨鱼纲</td><td>0–700 m</td><td>鱼翅 · 撞击 · 旅游干扰</td>
+              <td><span class="pill en">濒危</span></td>
+            </tr>
+            <tr>
+              <td class="name"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#whale"></use></svg>抹香鲸</td>
+              <td>哺乳纲</td><td>0–2250 m</td><td>船撞 · 噪音 · 缠网</td>
+              <td><span class="pill vu">易危</span></td>
+            </tr>
+            <tr>
+              <td class="name"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#squid"></use></svg>大王酸浆鱿</td>
+              <td>头足纲</td><td>1000–2200 m</td><td>深海捕捞 · 数据空白</td>
+              <td><span class="pill nt">数据缺乏</span></td>
+            </tr>
+            <tr>
+              <td class="name"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#lanternfish"></use></svg>灯笼鱼类群</td>
+              <td>辐鳍鱼纲</td><td>200–1000 m</td><td>中层商业捕捞</td>
+              <td><span class="pill nt">数据缺乏</span></td>
+            </tr>
+            <tr>
+              <td class="name"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#anglerfish"></use></svg>深海鮟鱇</td>
+              <td>辐鳍鱼纲</td><td>1000–4000 m</td><td>底拖网</td>
+              <td><span class="pill nt">数据缺乏</span></td>
+            </tr>
+            <tr>
+              <td class="name"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#jellyfish"></use></svg>深海水母</td>
+              <td>刺胞动物</td><td>0–8000 m</td><td>升温 · 酸化</td>
+              <td><span class="pill lc">无危</span></td>
+            </tr>
+            <tr>
+              <td class="name"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#vent"></use></svg>热液喷口群落</td>
+              <td>化能生态系统</td><td>2000–5000 m</td><td class="cr">深海采矿 · 不可逆</td>
+              <td><span class="pill cr">受采矿威胁</span></td>
+            </tr>
+            <tr>
+              <td class="name"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#amphipod"></use></svg>端足类</td>
+              <td>甲壳纲</td><td>4000–11000 m</td><td>微塑料 · 有毒沉积</td>
+              <td><span class="pill nt">数据缺乏</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="legend reveal">
+      <span class="pill lc">无危 LC</span>
+      <span class="pill nt">数据缺乏 DD</span>
+      <span class="pill vu">易危 VU</span>
+      <span class="pill en">濒危 EN</span>
+      <span class="pill cr">极危 / 危机 CR</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     威胁
+     ============================================================ -->
+<section id="threats" class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">PRESSURES · 正在发生的五件事</div>
+    <h2 class="title reveal">海洋没有在坏掉<span class="thin"> —— 它正在被拆掉</span></h2>
+    <p class="lede reveal">
+      这五件事同时发生，而且互相加乘：变暖让珊瑚变弱，变酸让贝壳变薄，
+      塑料让它们更容易生病，捕捞拿走了恢复所需的成年个体。
+      <strong>海洋不是承受不住任何一项，而是承受不住全部。</strong>
+    </p>
+
+    <div class="threat-list">
+
+      <article class="threat reveal" data-level="92">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#coral"></use></svg></div>
+        <div>
+          <h3>① 变暖与白化</h3>
+          <p>
+            海洋吸收了工业革命以来人类排放的<strong>约 90% 的额外热量</strong>。
+            珊瑚在持续高温下驱逐体内的共生藻，失去颜色和食物来源。
+            大堡礁在近三十年里经历了多次大规模白化。白化不是死亡，但白化之后若再升温，就是。
+          </p>
+        </div>
+        <div class="meter"><div class="bar"><i></i></div><b>严重度 92</b></div>
+      </article>
+
+      <article class="threat reveal" data-level="88">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#plastic"></use></svg></div>
+        <div>
+          <h3>② 塑料与微塑料</h3>
+          <p>
+            海洋里的塑料不会消失，只会碎。小于 5 毫米的微塑料已被发现于海水、
+            海冰、深海沉积物、贝类、鱼类，甚至人体的血液里。
+            它像海绵一样吸附有毒物质，然后被最底层的生物吃下去，
+            顺着食物链一路往上走。
+          </p>
+        </div>
+        <div class="meter"><div class="bar"><i></i></div><b>严重度 88</b></div>
+      </article>
+
+      <article class="threat reveal" data-level="90">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#turtle"></use></svg></div>
+        <div>
+          <h3>③ 过度捕捞与底拖网</h3>
+          <p>
+            全球约三分之一的鱼类种群已被过度捕捞。
+            底拖网像推土机一样刮过海底，一次作业可以铲平生长了
+            <strong>几百年甚至上千年的深海珊瑚</strong>。
+            更糟的是，被刮掉的珊瑚不只是「死了」，而是连同它支撑的整个栖息地一起消失。
+          </p>
+        </div>
+        <div class="meter"><div class="bar"><i></i></div><b>严重度 90</b></div>
+      </article>
+
+      <article class="threat reveal" data-level="76">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#jellyfish"></use></svg></div>
+        <div>
+          <h3>④ 酸化</h3>
+          <p>
+            海水吸收了我们排放的二氧化碳，于是变酸。
+            对螃蟹、牡蛎、海螺、珊瑚这些要「用碳酸钙盖房子」的生物来说，
+            等于在酸里砌墙——壳会变薄、变形、甚至被溶掉。
+            幼体阶段最容易受到伤害，而幼体决定下一代还有没有。
+          </p>
+        </div>
+        <div class="meter"><div class="bar"><i></i></div><b>严重度 76</b></div>
+      </article>
+
+      <article class="threat reveal" data-level="70">
+        <div class="glyph"><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#vent"></use></svg></div>
+        <div>
+          <h3>⑤ 深海采矿与噪音</h3>
+          <p>
+            为了电池和电子设备，有人正准备去海底刮取多金属结核——
+            而那正是热液喷口和深渊生物唯一的地板。
+            与此同时，船舶与勘探的噪音穿透整个水体，让靠声音生存的鲸类
+            <strong>听不见彼此</strong>。海底的恢复以百年计，采矿以小时计。
+          </p>
+        </div>
+        <div class="meter"><div class="bar"><i></i></div><b>严重度 70</b></div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     对照
+     ============================================================ -->
+<section id="contrast" class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">TWO VERSIONS · 两种未来</div>
+    <h2 class="title reveal">同一片海，两种结局</h2>
+    <p class="lede reveal">下面两个版本之间，差别不在科技水平，只在于我们<strong>今天选择做什么</strong>。</p>
+
+    <div class="glass reveal" style="overflow:hidden">
+      <div class="compare">
+        <div class="cmp-col good">
+          <h4>如果现在就动手</h4>
+          <ul class="cmp-list">
+            <li><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#coral"></use></svg><span>珊瑚礁恢复覆盖，鱼群回到礁区，沿海渔村有鱼可打。</span></li>
+            <li><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#turtle"></use></svg><span>海龟上岸产卵的沙滩被保留下来，幼龟重新爬向大海。</span></li>
+            <li><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#whale"></use></svg><span>鲸群数量回升，它们「施肥」的海域浮游植物更旺盛，反过来吸走更多碳。</span></li>
+            <li><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#vent"></use></svg><span>深海保持未开发状态，热液喷口继续孕育我们还没命名的物种。</span></li>
+            <li><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#lanternfish"></use></svg><span>中层鱼类留在食物链里，金枪鱼和鲸鱼有饭吃。</span></li>
+          </ul>
+        </div>
+        <div class="cmp-col bad">
+          <h4>如果继续照旧</h4>
+          <ul class="cmp-list">
+            <li><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#coral"></use></svg><span>珊瑚在升温中大面积消亡，礁区变成藻类覆盖的废墟，渔业崩塌。</span></li>
+            <li><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#turtle"></use></svg><span>产卵沙滩被开发、被海水淹没，孵化温度失衡，种群只剩雌性。</span></li>
+            <li><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#whale"></use></svg><span>鲸类被噪音与船撞持续削减，海洋失去最重要的天然碳泵之一。</span></li>
+            <li><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#vent"></use></svg><span>采矿扬起沉积物云，喷口群落被掩埋，千年尺度的栖息地一次清零。</span></li>
+            <li><svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#plastic"></use></svg><span>微塑料继续累积，每一层海水、每一只深海虾体内都带着它。</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     清理互动
+     ============================================================ -->
+<section id="act" class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">INTERACTION · 你来试试</div>
+    <h2 class="title reveal">点一下，捞一个瓶子</h2>
+    <p class="lede reveal">
+      这当然解决不了问题——每分钟真的有一整车塑料进入海洋。
+      但请你记住这种感觉：<strong>捞起来很慢，扔下去很快。</strong>
+    </p>
+
+    <div class="glass clean-panel reveal">
+      <div>
+        <h3>净海行动 · 交互演示</h3>
+        <p>
+          点击下方按钮或直接点击画面里的塑料瓶，把它们从海水里捞出来。
+          你会发现它们源源不断地漂过来——而这正是现实的样子。
+        </p>
+        <div class="clean-actions">
+          <button class="btn primary" id="btn-clean" type="button">
+            <svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#plastic"></use></svg>
+            撒一张网
+          </button>
+          <button class="btn" id="btn-spot" type="button">
+            <svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#lanternfish"></use></svg>
+            看看水里有什么
+          </button>
+        </div>
+      </div>
+      <div class="clean-stat">
+        <div class="big" id="clean-count">0</div>
+        <div class="lbl">已捞出的塑料</div>
+        <div class="sub" id="clean-note">海面看起来还挺干净</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     承诺
+     ============================================================ -->
+<section id="pledge" class="sec">
+  <div class="wrap">
+    <div class="eyebrow reveal">PLEDGE · 六件事，今天就能做</div>
+    <h2 class="title reveal">不需要成为英雄<span class="thin"> · 只需要不再假装不知道</span></h2>
+    <p class="lede reveal">
+      保护海洋的门槛比想象中低。真正难的不是做到，而是<strong>持续做到</strong>。
+    </p>
+
+    <div class="pledge reveal">
+      <div class="pledge-grid">
+
+        <div class="pledge-item">
+          <div class="n">01</div>
+          <div>
+            <h4>带自己的杯子</h4>
+            <p>一次性的瓶子、吸管、餐具是海滩垃圾的前几名。自带，就不产生。</p>
+          </div>
+        </div>
+
+        <div class="pledge-item">
+          <div class="n">02</div>
+          <div>
+            <h4>挑对的海鲜</h4>
+            <p>避开濒危物种和破坏性捕捞方式。少吃不等于不吃，会挑才是关键。</p>
+          </div>
+        </div>
+
+        <div class="pledge-item">
+          <div class="n">03</div>
+          <div>
+            <h4>防晒霜看成分</h4>
+            <p>含氧苯酮等成分会伤害珊瑚。下水前选物理防晒，或者干脆穿长袖水母衣。</p>
+          </div>
+        </div>
+
+        <div class="pledge-item">
+          <div class="n">04</div>
+          <div>
+            <h4>不碰、不踩、不带走</h4>
+            <p>浮潜时别站在珊瑚上，别把贝壳和活体带回家。你只是客人。</p>
+          </div>
+        </div>
+
+        <div class="pledge-item">
+          <div class="n">05</div>
+          <div>
+            <h4>参加一次净滩</h4>
+            <p>哪怕只捡一袋。净滩的意义一半在垃圾，一半在于你会从此看见它们。</p>
+          </div>
+        </div>
+
+        <div class="pledge-item">
+          <div class="n">06</div>
+          <div>
+            <h4>把这件事讲出去</h4>
+            <p>分享这份档案。海洋保护最大的障碍不是反对，而是无人关注。</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     结尾
+     ============================================================ -->
+<section class="finale" id="finale">
+  <div class="wrap">
+    <div class="eyebrow reveal" style="justify-content:center">LAST LINE · 最后一句话</div>
+    <h2 class="reveal">我们叫它<em>海洋</em>，<br>其实应该叫它<em>这颗星球的生命支持系统</em>。</h2>
+    <p class="reveal">
+      它给了我们一半以上的氧气、绝大部分的雨水、全部的蓝色。
+      它不需要我们的同情，它需要的是我们停下来。
+    </p>
+    <div class="hero-cta reveal">
+      <a class="btn primary" href="#surface">
+        <svg class="ic" viewBox="0 0 100 100" aria-hidden="true"><use href="#dolphin"></use></svg>
+        回到海面
+      </a>
+      <button class="btn" id="btn-share" type="button">分享这份档案</button>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="foot">
+    <small>深蓝档案 · OCEAN DOSSIER · 制作人 <b style="color:var(--glow)">吴晨</b></small>
+    <span class="sig">数据来源：公开的海洋研究与保护评估 · 内容仅用于科普与倡导 · <b>吴晨</b> 出品</span>
+  </div>
+</footer>
+
+<!-- ============================================================
+     海洋生物图标精灵（12 个 symbol，供全站 <use> 引用）
+     ============================================================ -->
+<svg id="marine" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <symbol id="coral" viewBox="0 0 100 100">
+    <path d="M32 90c2-10 4-18 8-24"/>
+    <path d="M42 90c-1-12 0-22 2-30"/>
+    <path d="M52 90c1-11 3-20 7-27"/>
+    <path d="M68 90c-2-9-3-16-1-22"/>
+    <path d="M40 66c-4-6-8-9-14-11"/>
+    <path d="M54 63c4-7 9-11 16-13"/>
+    <path d="M44 52c-2-6-1-12 2-17"/>
+    <path d="M26 55c-1-6 1-11 5-15"/>
+    <path d="M70 50c2-5 1-10-2-14"/>
+  </symbol>
+  <symbol id="turtle" viewBox="0 0 100 100">
+    <ellipse cx="50" cy="50" rx="24" ry="28"/>
+    <path d="M50 24v52"/>
+    <path d="M28 40h44"/>
+    <path d="M28 60h44"/>
+    <path d="M26 34c-8-10-16-12-20-8s2 12 10 16"/>
+    <path d="M26 66c-8 10-16 12-20 8s2-12 10-16"/>
+    <path d="M74 34c8-10 16-12 20-8s-2 12-10 16"/>
+    <path d="M74 66c8 10 16 12 20 8s-2-12-10-16"/>
+    <path d="M50 21c-3-5-6-8-10-8"/>
+  </symbol>
+  <symbol id="dolphin" viewBox="0 0 100 100">
+    <path d="M14 62c8-14 22-24 38-28 12-3 22-1 26 4"/>
+    <path d="M14 62c10 6 22 8 34 6"/>
+    <path d="M78 38c4-2 8-2 12 1-3 4-7 6-12 6"/>
+    <path d="M52 34c2-8 6-14 12-18 1 8-1 14-6 18"/>
+    <path d="M20 60c-6-2-11-6-14-12 6 1 11 4 15 9"/>
+    <path d="M12 50c-4 2-6 6-6 10 5-1 9-3 12-7"/>
+    <path d="M46 44c1 4 2 8 3 12"/>
+  </symbol>
+  <symbol id="whaleshark" viewBox="0 0 100 100">
+    <path d="M10 52c6-10 18-16 32-17 16-1 30 4 38 13"/>
+    <path d="M10 52c6 10 18 16 32 17 16 1 30-4 38-13"/>
+    <path d="M80 48c4-1 7 1 8 4-2 3-5 4-9 4"/>
+    <path d="M54 35c-1-8 2-14 7-18 2 8 0 14-4 18"/>
+    <path d="M50 69c-1 8-4 13-9 16 0-7 2-12 6-16"/>
+    <circle cx="30" cy="48" r="2.6"/>
+    <circle cx="42" cy="44" r="2.6"/>
+    <circle cx="54" cy="47" r="2.6"/>
+    <circle cx="40" cy="58" r="2.6"/>
+    <circle cx="54" cy="59" r="2.6"/>
+    <circle cx="66" cy="52" r="2.6"/>
+  </symbol>
+  <symbol id="lanternfish" viewBox="0 0 100 100">
+    <path d="M18 50c8-10 20-16 34-16 12 0 22 5 28 13"/>
+    <path d="M18 50c8 10 20 16 34 16 12 0 22-5 28-13"/>
+    <path d="M80 47c4 1 6 4 4 7-2 3-5 3-8 1"/>
+    <path d="M80 53c4-1 6-4 4-7"/>
+    <path d="M26 66c-2 6-6 10-11 12 1-6 4-10 8-13"/>
+    <path d="M34 67c0 6-2 11-6 15 0-6 1-11 4-15"/>
+    <circle cx="34" cy="62" r="1.8"/>
+    <circle cx="42" cy="64" r="1.8"/>
+    <circle cx="50" cy="65" r="1.8"/>
+    <circle cx="58" cy="64" r="1.8"/>
+  </symbol>
+  <symbol id="squid" viewBox="0 0 100 100">
+    <path d="M50 8c8 0 14 10 14 22s-6 20-14 20-14-8-14-20S42 8 50 8z"/>
+    <path d="M36 26c-8-4-14-6-18-4 3 6 9 10 18 12"/>
+    <path d="M64 26c8-4 14-6 18-4-3 6-9 10-18 12"/>
+    <ellipse cx="42" cy="56" rx="8" ry="9"/>
+    <ellipse cx="58" cy="56" rx="8" ry="9"/>
+    <circle cx="42" cy="56" r="2.5"/>
+    <circle cx="58" cy="56" r="2.5"/>
+    <path d="M40 68c-4 8-8 14-14 18"/>
+    <path d="M47 70c-2 9-5 16-9 21"/>
+    <path d="M53 70c2 9 5 16 9 21"/>
+    <path d="M60 68c4 8 8 14 14 18"/>
+  </symbol>
+  <symbol id="whale" viewBox="0 0 100 100">
+    <path d="M12 46h34c14 0 26 5 32 13"/>
+    <path d="M12 46v14c0 8 8 14 18 14h16c8 0 14-2 18-6"/>
+    <path d="M12 60c-4 1-6 4-4 6 2 2 5 1 6-1"/>
+    <path d="M60 68c6 2 12 2 18-2"/>
+    <path d="M62 44c-2-6 0-10 4-13 1 6 0 10-2 13"/>
+    <path d="M80 60c6-6 12-8 16-6-4 6-9 9-15 10"/>
+    <path d="M80 60c6 6 12 8 16 6-4-6-9-9-15-10"/>
+    <path d="M26 56c4 2 8 2 12 0"/>
+  </symbol>
+  <symbol id="anglerfish" viewBox="0 0 100 100">
+    <path d="M22 52c0-16 10-26 24-26 14 0 24 10 24 24 0 14-10 24-24 24-14 0-24-10-24-22z"/>
+    <path d="M22 54c8 6 18 10 30 10 4 0 8-1 12-2"/>
+    <path d="M30 60l-4 8"/>
+    <path d="M40 64l-3 9"/>
+    <path d="M50 65l-2 9"/>
+    <path d="M60 63l-1 8"/>
+    <path d="M32 40c-8-6-12-14-12-24 6 6 10 13 14 20"/>
+    <circle cx="38" cy="18" r="5"/>
+    <circle cx="62" cy="46" r="3"/>
+  </symbol>
+  <symbol id="jellyfish" viewBox="0 0 100 100">
+    <path d="M18 50c0-18 14-30 32-30s32 12 32 30z"/>
+    <path d="M18 50c4 6 8 4 10 0 3 6 8 4 10 0 3 6 8 4 10 0 3 6 8 4 10 0 3 6 8 4 10 0 2 4 6 6 10 0"/>
+    <path d="M32 52c-3 12-2 22 2 30-6-6-8-18-6-30"/>
+    <path d="M44 53c-2 14 0 24 4 32"/>
+    <path d="M56 53c3 13 2 24-2 32"/>
+    <path d="M68 52c3 12 1 22-3 30"/>
+  </symbol>
+  <symbol id="vent" viewBox="0 0 100 100">
+    <path d="M8 86h84"/>
+    <path d="M36 86l6-24h16l6 24z"/>
+    <path d="M42 62c-2-8 0-14 4-18"/>
+    <path d="M50 62c0-10 2-18 4-24"/>
+    <path d="M58 62c2-8 2-14 0-20"/>
+    <path d="M44 40c-4-6-6-12-4-18 4 4 6 10 8 16"/>
+    <path d="M54 36c2-8 6-14 12-16-4 6-6 12-8 18"/>
+    <path d="M62 22c-2-5-1-9 2-12"/>
+    <path d="M26 86c-2-6-2-11 0-15 2 4 3 9 3 15z"/>
+    <path d="M74 86c2-6 2-11 0-15-2 4-3 9-3 15z"/>
+  </symbol>
+  <symbol id="amphipod" viewBox="0 0 100 100">
+    <path d="M30 22c14-6 30 4 34 20 4 16-2 32-12 40-8 6-16 6-22 2"/>
+    <path d="M30 22c-6 4-8 12-6 20 2 10 8 18 16 24"/>
+    <path d="M38 32c-6 4-8 10-6 16"/>
+    <path d="M46 40c-6 4-8 10-6 16"/>
+    <path d="M54 50c-5 5-7 11-5 17"/>
+    <path d="M62 62c-4 6-5 12-3 17"/>
+    <path d="M24 26c-8-8-14-14-18-18"/>
+    <path d="M28 32c-9-2-16-2-22 0"/>
+    <circle cx="34" cy="22" r="2.5"/>
+  </symbol>
+  <symbol id="plastic" viewBox="0 0 100 100">
+    <path d="M34 32c0-4 2-6 6-6h14c4 0 6 2 6 6v44c0 4-2 6-6 6H40c-4 0-6-2-6-6z"/>
+    <path d="M43 26v-6h12v6"/>
+    <path d="M43 16h12"/>
+    <path d="M38 44h24"/>
+    <path d="M38 62h24"/>
+    <circle cx="72" cy="30" r="9"/>
+    <circle cx="72" cy="30" r="4"/>
+    <path d="M20 78l6-6"/>
+    <path d="M14 88l5-5"/>
+    <path d="M86 62l5-5"/>
+  </symbol>
+</svg>
+
+<div id="toast" class="chip" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+<script>
+/* 兜底：若 app.js 未执行（脚本被拦/报错），5.5 秒后无论如何放行页面 */
+setTimeout(function () {
+  var i = document.getElementById('intro');
+  if (i && !i.dataset.finished) { i.dataset.finished = '1'; i.style.display = 'none'; }
+  document.body.classList.remove('loading');
+  document.body.classList.add('loaded');
+}, 5500);
+</script>
+</body>
+</html>
